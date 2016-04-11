@@ -1,0 +1,47 @@
+mysql:
+  restart: always
+  build: ./mysql
+  volumes_from:
+  - mysql_data
+  - start_data
+  env_file: .env
+
+mysql_data:
+  image: gliderlabs/alpine:3.3
+  volumes:
+  - /var/lib/mysql
+  command: /bin/sh
+
+app_data:
+  image: gliderlabs/alpine:3.3
+  volumes:
+  - /home/django/app/static
+  command: /bin/sh
+
+start_data:
+  image: gliderlabs/alpine:3.3
+  volumes:
+  - /entrypoint
+  command: /bin/sh
+
+nginx:
+  restart: always
+  build: ./nginx
+  volumes_from:
+  - app_data
+  ports:
+  - "80:80"
+  links:
+  - app:app
+
+app:
+  restart: always
+  build: ./app
+  expose:
+  - "8080"
+  env_file: .env
+  links:
+  - mysql:mysql
+  volumes_from:
+  - app_data
+  - start_data
